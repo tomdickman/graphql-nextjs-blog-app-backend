@@ -32,7 +32,7 @@ export const authMutations = {
         let token = null
 
         console.log(input)
-        const { email, name, password } = input
+        const { bio, email, name, password } = input
         if (!validator.isEmail(email)) errors.push("Invalid email")
         if (!validator.isLength(password, { min: 5 })) errors.push("Invalid password")
         const hashedPassword = await hash(password, 10)
@@ -44,6 +44,12 @@ export const authMutations = {
                         email,
                         name,
                         password: hashedPassword
+                    }
+                })
+                prisma.profile.create({
+                    data: {
+                        bio,
+                        userId: user.id
                     }
                 })
                 token = JWT.sign(
