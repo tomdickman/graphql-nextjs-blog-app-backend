@@ -6,6 +6,10 @@ export interface PostCreateArgs {
     content: string
 }
 
+export interface PostDeleteArgs {
+    id: string
+}
+
 export interface PostPayloadType {
     userErrors: { message: String }[],
     post: Post | null
@@ -51,6 +55,31 @@ export const Mutation = {
                 return { message: error.message}
             }),
             post
+        }
+    },
+    postDelete: async (
+        _parent: any,
+        { id }: PostDeleteArgs,
+        { prisma }: Context
+    ): Promise<PostPayloadType> => {
+        const errors: Error[] = []
+        let deletedPost = null
+
+        try {
+            deletedPost = await prisma.post.delete({
+                where: {
+                    id: Number(id)
+                },
+            })
+        } catch (error) {
+            errors.push(new Error("Prisma error deleting a Post"))
+        }
+
+        return {
+            userErrors: errors.map(error => {
+                return { message: error.message}
+            }),
+            post: deletedPost
         }
     },
     postUpdate: async (
