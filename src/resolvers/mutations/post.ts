@@ -1,5 +1,6 @@
 import { Context } from "../..";
 import { Post } from "@prisma/client";
+import { canUserMutatePost } from "../../utils/canUserMutatePost";
 
 export interface PostCreateArgs {
     title: string,
@@ -89,22 +90,36 @@ export const postMutations = {
     postUpdate: async (
         _parent: any,
         { id, post }: PostUpdateArgs,
-        { prisma }: Context
+        { prisma, userInfo }: Context
     ): Promise<PostPayload> => {
         const errors: Error[] = []
         let updatedPost = null
 
-        try {
-            updatedPost = await prisma.post.update({
-                where: {
-                    id: Number(id)
-                },
-                data: {
-                    ...post
-                }
-            })
-        } catch (error) {
-            errors.push(new Error("Prisma error updating a Post"))
+        if (!userInfo || !userInfo.userId) {
+            errors.push(new Error("not authorized"))
+        } else {
+            if (!await canUserMutatePost({
+                userId: userInfo.userId,
+                postId: Number(id),
+                prisma
+            })) {
+                errors.push(new Error("can only edit own posts"))
+            }
+        }
+
+        if (errors.length === 0) {
+            try {
+                updatedPost = await prisma.post.update({
+                    where: {
+                        id: Number(id)
+                    },
+                    data: {
+                        ...post
+                    }
+                })
+            } catch (error) {
+                errors.push(new Error("Prisma error updating a Post"))
+            }
         }
 
         return {
