@@ -1,4 +1,4 @@
-import { Context } from "..";
+import { Context } from "../..";
 import { Post } from "@prisma/client";
 
 export interface PostCreateArgs {
@@ -10,7 +10,7 @@ export interface PostDeleteArgs {
     id: string
 }
 
-export interface PostPayloadType {
+export interface PostPayload {
     userErrors: { message: String }[],
     post: Post | null
 
@@ -25,12 +25,12 @@ export interface PostUpdateArgs {
     }
 }
 
-export const Mutation = {
+export const postMutations = {
     postCreate: async (
         _parent: any,
         { title, content }: PostCreateArgs,
         { prisma }: Context
-    ): Promise<PostPayloadType> => {
+    ): Promise<PostPayload> => {
         const errors: Error[] = []
         let post = null
 
@@ -61,7 +61,7 @@ export const Mutation = {
         _parent: any,
         { id }: PostDeleteArgs,
         { prisma }: Context
-    ): Promise<PostPayloadType> => {
+    ): Promise<PostPayload> => {
         const errors: Error[] = []
         let deletedPost = null
 
@@ -86,7 +86,7 @@ export const Mutation = {
         _parent: any,
         { id, post }: PostUpdateArgs,
         { prisma }: Context
-    ): Promise<PostPayloadType> => {
+    ): Promise<PostPayload> => {
         const errors: Error[] = []
         let updatedPost = null
 
