@@ -1,4 +1,4 @@
-import { hash } from "bcryptjs"
+import { compare, hash } from "bcryptjs"
 import validator from "validator"
 import JWT from "jsonwebtoken"
 import "dotenv/config"
@@ -12,6 +12,13 @@ export interface SignUpArgs {
         email: string
         name: string
         bio: string
+        password: string
+    }
+}
+
+export interface SignInArgs {
+    input: {
+        email: string
         password: string
     }
 }
@@ -52,15 +59,7 @@ export const authMutations = {
                         userId: user.id
                     }
                 })
-                token = JWT.sign(
-                    {
-                        userId: user.id
-                    }, 
-                    process.env.JWT_KEY as JWT.Secret, 
-                    {
-                        expiresIn: 3600
-                    }
-                )
+                token = JWT.sign({ userId: user.id }, process.env.JWT_KEY as JWT.Secret)
             } catch (error) {
                 console.error(error)
                 errors.push("Prisma error creating User")
@@ -75,5 +74,37 @@ export const authMutations = {
                 }
             })
         }
+    },
+    signin: async (_parent: any, { input }: SignInArgs, { prisma }: Context): Promise<UserPayload> => {
+        const { email, password } = input
+        let errors: string[] = []
+        let token = null
+
+        const hashedPassword = await hash(password, 10)
+
+        try {
+            const user = await prisma.user.findUnique({
+                where: {
+                    email
+                }
+            })
+            if (user && await compare(password, user.password)) {
+                token = JWT.sign({ userId: user.id }, process.env.JWT_KEY as JWT.Secret)
+            } else {
+                errors.push("Invalid username and/or password")
+            }
+        } catch(error) {
+            errors.push("Prisma error finding User")
+        }
+
+        return {
+            token,
+            userErrors: errors.map(error => {
+                return {
+                    message: error
+                }
+            })
+        }
+
     }
 }

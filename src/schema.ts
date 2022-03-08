@@ -9,7 +9,8 @@ const typeDefs = gql`
         postCreate(title: String!, content: String!): PostPayload!
         postUpdate(id: ID!, post: PostUpdateInput!): PostPayload!
         postDelete(id: ID!): PostPayload!
-        signup(input: SignUpInput): UserPayload!
+        signup(input: SignUpInput!): UserPayload!
+        signin(input: SignInInput!): UserPayload!
     }
 
     type Post {
@@ -58,6 +59,11 @@ const typeDefs = gql`
         email: String!
         name: String!
         bio: String!
+        password: String!
+    }
+
+    input SignInInput {
+        email: String!
         password: String!
     }
 `
