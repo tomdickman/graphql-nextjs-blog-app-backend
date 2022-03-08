@@ -29,20 +29,24 @@ export const postMutations = {
     postCreate: async (
         _parent: any,
         { title, content }: PostCreateArgs,
-        { prisma }: Context
+        { prisma, userInfo }: Context
     ): Promise<PostPayload> => {
         const errors: Error[] = []
         let post = null
 
+        if (!userInfo || !userInfo.userId) {
+            errors.push(new Error("not authorized"))
+        }
+
         if (!title || !content) {
             errors.push(new Error("missing required param"))
-        } else {
+        } else if (errors.length === 0) {
             try {
                 post = await prisma.post.create({
                     data: {
                         title,
                         content,
-                        authorId: 1
+                        authorId: userInfo?.userId as number
                     }
                 })
             } catch (error) {
