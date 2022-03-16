@@ -2,14 +2,24 @@ import { Post } from "@prisma/client"
 import { Context } from ".."
 
 export const Query = {
-    posts: (_parent: any, _args: any, { prisma }: Context) => {
+    posts: async (_parent: any, _args: any, { prisma }: Context) => {
         try {
-            return prisma.post.findMany({
+            const posts = await prisma.post.findMany({
                 orderBy: [
                     {
                         createdAt: "desc"
                     }
                 ],
+                include: {
+                    author: true
+                }
+            })
+
+            return posts.map(post => {
+                return {
+                    ...post,
+                    user: post.author
+                }
             })
         } catch(error) {
             console.error(error)
