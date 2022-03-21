@@ -2,27 +2,35 @@ import { Post } from "@prisma/client"
 import { Context } from ".."
 
 export const Query = {
-    posts: async (_parent: any, _args: any, { prisma }: Context) => {
-        try {
-            const posts = await prisma.post.findMany({
-                orderBy: [
-                    {
-                        createdAt: "desc"
-                    }
-                ],
-                include: {
-                    author: true
-                }
-            })
+    posts: async (_parent: any, _args: any, { prisma, userInfo }: Context) => {
+        let posts: Post[] = []
+        const userErrors = []
 
-            return posts.map(post => {
-                return {
-                    ...post,
-                    user: post.author
-                }
-            })
-        } catch(error) {
-            console.error(error)
+        if (!userInfo || !userInfo.userId) {
+            userErrors.push(new Error("not authorized"))
+        } else {
+            try {
+                posts = await prisma.post.findMany({
+                    where: {
+                        id: Number(userInfo.userId)
+                    },
+                    orderBy: [
+                        {
+                            createdAt: "desc"
+                        }
+                    ],
+                    include: {
+                        author: true
+                    }
+                })
+            } catch(error) {
+                console.error(error)
+            }
+        }
+
+        return {
+            posts,
+            userErrors,
         }
     }
 }
